@@ -8,10 +8,13 @@ public class Main {
         CrptApi api = new CrptApi(TimeUnit.SECONDS, 3, 5);
 
         // Заглушка документа
-        CrptApi.Document doc = new CrptApi.Document();
-        CrptApi.Description desc = new CrptApi.Description();
-        desc.setParticipantInn("1234567890");
-        doc.setDescription(desc);
+        CrptApi.ApiRequest doc = new CrptApi.ApiRequest(
+                "JSON",
+                "Содержимое документа",
+                "1",
+                "Sign",
+                "AGGREGATION_DOCUMENT"
+        );
 
         String fakeSignature = "test-signature";
         String fakeToken = "test-token";
@@ -21,7 +24,7 @@ public class Main {
             final int requestId = i;
             new Thread(() -> {
                 try {
-                    System.out.println("Отправка запроса #" + requestId + " в " + System.currentTimeMillis());
+                    System.out.println("Отправка запроса #" + requestId + " в " + Thread.currentThread().getName());
                     // Вызов метода. Он будет блокировать поток, если лимит превышен.
                     String response = api.testCreateDocument(doc, fakeSignature, fakeProductGroup, fakeToken);
                     System.out.println("Ответ на запрос #" + requestId + ": " + response);

@@ -1,8 +1,7 @@
 package ru.fisher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Data;
-import lombok.SneakyThrows;
+import lombok.*;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -19,7 +18,6 @@ import java.util.concurrent.*;
 public class CrptApi {
 
     private static final String API_URL = "https://ismp.crpt.ru/api/v3/lk/documents/create";
-    private final long period;
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
     private final Semaphore semaphore;
@@ -37,7 +35,6 @@ public class CrptApi {
                 .build();
         this.objectMapper = new ObjectMapper();
         this.semaphore = new Semaphore(requestLimit, true);
-        this.period = period;
         this.scheduler = Executors.newSingleThreadScheduledExecutor();
         long periodMillis = timeUnit.toMillis(period);
 
@@ -58,7 +55,7 @@ public class CrptApi {
      * @return Ответ сервера в виде строки
      */
     @SneakyThrows
-    public String createDocument(Document document, String signature, String productGroup, String token) {
+    public String createDocument(Object document, String signature, String productGroup, String token) {
         semaphore.acquire(); // блокируем поток, если лимит исчерпан
 
         // сериализация документа
@@ -91,7 +88,7 @@ public class CrptApi {
      *  Ответ всегда - FAKE_RESPONSE_OK
      */
     @SneakyThrows
-    public String testCreateDocument(Document document, String signature,
+    public String testCreateDocument(Object document, String signature,
                                      String productGroup, String token) throws InterruptedException {
         semaphore.acquire(); // блокируем поток, если лимит исчерпан
 
@@ -116,49 +113,9 @@ public class CrptApi {
         scheduler.shutdownNow();
     }
 
-    // DTO классы
-    @Data
-    public static class ApiRequest {
-        private final String document_format;
-        private final String product_document;
-        private final String product_group;
-        private final String signature;
-        private final String type;
-    }
-
-    @Data
-    public static class Document {
-        private Description description;
-        private String doc_id;
-        private String doc_status;
-        private String doc_type;
-        private Boolean importRequest;
-        private String owner_inn;
-        private String participant_inn;
-        private String producer_inn;
-        private String production_date;
-        private String production_type;
-        private Product[] products;
-        private String reg_date;
-        private String reg_number;
-    }
-
-    @Data
-    public static class Description {
-        private String participantInn;
-    }
-
-    @Data
-    public static class Product {
-        private String certificate_document;
-        private String certificate_document_date;
-        private String certificate_document_number;
-        private String owner_inn;
-        private String producer_inn;
-        private String production_date;
-        private String tnved_code;
-        private String uit_code;
-        private String uitu_code;
+    // Вспомогательный класс для отправки запроса
+    public record ApiRequest(String document_format, String product_document,
+                           String product_group, String signature, String type) {
     }
 }
 
